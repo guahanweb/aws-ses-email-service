@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+export DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export PROJECT_ROOT=$( dirname "${DIR}" )
+export SCRIPTS_DIRECTORY="${PROJECT_ROOT}/scripts"
+
+[[ -f ~/.bashrc ]] && source ~/.bashrc
+[[ -f ${DIR}/settings.sh ]] && source ${DIR}/settings.sh
+[[ -f ${DIR}/utils.sh ]] && source ${DIR}/utils.sh
+
+ProgName=$(basename $0)
+subcommand=$1
+
+function display_usage() {
+    echo "Usage: ${ProgName} <subcommand>..."
+}
+
+function build_lambda() {
+    local lambda=$1
+    local lambdaPath="${PROJECT_ROOT}/functions/${lambda}"
+    [[ ! -d ${lambdaPath} ]] && fail "unknown lambda function specified"
+    [[ ! -f ${lambdaPath}/tsconfig.json ]] && fail "lambda function has not tsconfig.json file defined"
+
+    mkdir -p ${PROJECT_ROOT}/dist/tmp
+    npm run tsc -- --project ${lambdaPath}/tsconfig.json
+
+    cd ${PROJECT_ROOT}/dist/tmp
+    cp ${PROJECT_ROOT}/package.json .
+    npm install --omit=dev
+    mv ../index.js .
+
+    version=$(cat package.json | jq -r .version)
+    zip -r ../${lambda}-${version}.zip ./node_modules ./index.js
+    cd -
+    rm -rf ${PROJECT_ROOT}/dist/tmp
+}
+
+function create_lambda() {
+    local lambda=$1
+    local lambdaPath="${PROJECT_ROOT}/functions/${lambda}"
+    [[ -d ${lambdaPath} ]] && fail "specified lambda already exists: ${BOLD_WHITE}${lambda}${NC}"
+
+    mkdir -p ${lambdaPath}
+    cp ${SCRIPTS_DIRECTORY}/templates/base-function.ts ${lambdaPath}/index.ts
+    cp ${SCRIPTS_DIRECTORY}/templates/base.tsconfig.json ${lambdaPath}/tsconfig.json
+}
+
+[[ -z "${subcommand}" ]] && fail "$(display_usage)"
+case ${subcommand} in
+    help )
+        display_usage
+        ;;
+
+    build )
+        shift
+        build_lambda "$1"
+        ;;
+
+    create )
+        shift
+        create_lambda "$1"
+        ;;
+
+    * )
+        warn "unknown subcommand: ${BOLD_WHITE}${subcommand}${NC}"
+        display_usage
+        ;;
+esac
+

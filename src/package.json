@@ -1,0 +1,24 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "main": "functions/index.ts",
+  "scripts": {
+    "tsc": "tsc",
+    "template:build": "ts-node email/compile"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.140",
+    "@types/node": "20.14.9",
+    "@typescript-eslint/eslint-plugin": "7.14.1",
+    "@typescript-eslint/parser": "7.14.1",
+    "aws-sdk": "2.1651.0",
+    "eslint": "8.57.0",
+    "ts-node": "10.9.2",
+    "tslib": "2.6.3",
+    "typescript": "5.5.2"
+  }
+}

@@ -1,0 +1,5 @@
+Hello, World!
+
+Welcome to our site. We hope you like it here.
+
+Click to confirm your email: https://foobar.com/click-link?t={{ token }}
